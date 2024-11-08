@@ -1,4 +1,3 @@
-```markdown
 # Документація системи інвентаризації
 
 ## Зміст
@@ -14,6 +13,7 @@
 
 # Структура проекту
 
+```
 inventory-system/
 ├── app.py # Головний файл додатку
 ├── .env # Файл з налаштуваннями середовища
@@ -32,6 +32,7 @@ inventory-system/
 │   └── reports.html # Сторінка звітів
 ├── requirements.txt # Залежності проекту
 └── .gitignore # Файл для ігнорування файлів у Git
+```
 
 
 ## Налаштування
@@ -46,7 +47,7 @@ MYSQL_DATABASE=inventory_db
 ```
 
 ### Встановлення залежностей
-```bash
+```
 pip install -r requirements.txt
 ```
 
@@ -55,7 +56,7 @@ pip install -r requirements.txt
 ### Моделі даних
 
 #### Product (Товар)
-```python
+```
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -65,8 +66,9 @@ class Product(db.Model):
     min_quantity = db.Column(db.Integer, default=0)
 ```
 
+
 Приклад створення товару:
-```python
+```
 new_product = Product(
     name="Ноутбук Lenovo",
     code="LEN-001",
@@ -76,8 +78,9 @@ new_product = Product(
 )
 ```
 
+
 #### Operation (Операція)
-```python
+```
 class Operation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime, nullable=False)
@@ -87,8 +90,9 @@ class Operation(db.Model):
     price = db.Column(db.Float, nullable=False)
 ```
 
+
 Приклад створення операції:
-```python
+```
 new_operation = Operation(
     date=datetime.now(UTC),
     type='incoming',
@@ -103,7 +107,7 @@ new_operation = Operation(
 #### Товари
 
 ##### Додавання товару
-```python
+```
 @app.route('/add_product', methods=['POST'])
 @login_required
 def add_product():
@@ -119,7 +123,7 @@ def add_product():
 ```
 
 ##### Оновлення товару
-```python
+```
 @app.route('/update_product/<int:id>', methods=['POST'])
 @login_required
 def update_product(id):
@@ -135,7 +139,7 @@ def update_product(id):
 #### Операції
 
 ##### Додавання приходу
-```python
+```
 @app.route('/add_incoming', methods=['POST'])
 @login_required
 def add_incoming():
@@ -152,7 +156,7 @@ def add_incoming():
 ### JavaScript функції
 
 #### Додавання товару
-```javascript
+```
 function addProduct(event) {
     // Приклад виклику:
     // const form = document.querySelector('form');
@@ -161,7 +165,7 @@ function addProduct(event) {
 ```
 
 #### Редагування товару
-```javascript
+```
 function editProduct(id) {
     // Приклад виклику:
     // <button onclick="editProduct(1)">Редагувати</button>
@@ -171,7 +175,7 @@ function editProduct(id) {
 ## Приклади використання
 
 ### Реєстрація користувача
-```python
+```
 POST /register
 {
     "username": "admin",
@@ -181,7 +185,7 @@ POST /register
 ```
 
 ### Додавання товару
-```python
+```
 POST /add_product
 {
     "name": "Ноутбук Lenovo",
@@ -191,9 +195,8 @@ POST /add_product
     "min_quantity": 2
 }
 ```
-
 ### Додавання операції приходу
-```python
+```
 POST /add_incoming
 {
     "product_id": 1,
