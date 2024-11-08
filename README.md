@@ -1,4 +1,3 @@
-```markdown
 # Документація системи інвентаризації
 
 ## Зміст
@@ -14,6 +13,7 @@
 
 ## Структура проекту
 
+```
 inventory-system/
 ├── app.py # Головний файл додатку
 ├── .env # Файл з налаштуваннями середовища
@@ -32,28 +32,31 @@ inventory-system/
 │   └── reports.html # Сторінка звітів
 ├── requirements.txt # Залежності проекту
 └── .gitignore # Файл для ігнорування файлів у Git
+```
 
 
 ## Налаштування
 
 ### Змінні середовища
 Створіть файл `.env` з наступними змінними:
-
+```
 MYSQL_USER=your_username
 MYSQL_PASSWORD=your_password
 MYSQL_HOST=localhost
 MYSQL_DATABASE=inventory_db
-
+```
 
 ### Встановлення залежностей
+```
 pip install -r requirements.txt
-
+```
 
 ## Основні компоненти
 
 ### Моделі даних
 
 #### Product (Товар)
+```
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -61,9 +64,11 @@ class Product(db.Model):
     quantity = db.Column(db.Integer, default=0)
     price = db.Column(db.Float, nullable=False)
     min_quantity = db.Column(db.Integer, default=0)
+```
 
 
 Приклад створення товару:
+```
 new_product = Product(
     name="Ноутбук Lenovo",
     code="LEN-001",
@@ -71,9 +76,11 @@ new_product = Product(
     price=25000.00,
     min_quantity=2
 )
+```
 
 
 #### Operation (Операція)
+```
 class Operation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime, nullable=False)
@@ -81,9 +88,11 @@ class Operation(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
     quantity = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Float, nullable=False)
+```
 
 
 Приклад створення операції:
+```
 new_operation = Operation(
     date=datetime.now(UTC),
     type='incoming',
@@ -91,13 +100,14 @@ new_operation = Operation(
     quantity=5,
     price=24000.00
 )
-
+```
 
 ### API Endpoints
 
 #### Товари
 
 ##### Додавання товару
+```
 @app.route('/add_product', methods=['POST'])
 @login_required
 def add_product():
@@ -110,9 +120,10 @@ def add_product():
     #     "price": 25000.00,
     #     "min_quantity": 2
     # }
-
+```
 
 ##### Оновлення товару
+```
 @app.route('/update_product/<int:id>', methods=['POST'])
 @login_required
 def update_product(id):
@@ -123,11 +134,12 @@ def update_product(id):
     #     "quantity": 15,
     #     "price": 26000.00
     # }
-
+```
 
 #### Операції
 
 ##### Додавання приходу
+```
 @app.route('/add_incoming', methods=['POST'])
 @login_required
 def add_incoming():
@@ -139,37 +151,41 @@ def add_incoming():
     #     "price": 24000.00,
     #     "datetime": "2024-03-20T14:30"
     # }
-
+```
 
 ### JavaScript функції
 
 #### Додавання товару
+```
 function addProduct(event) {
     // Приклад виклику:
     // const form = document.querySelector('form');
     // form.addEventListener('submit', addProduct);
 }
-
+```
 
 #### Редагування товару
+```
 function editProduct(id) {
     // Приклад виклику:
     // <button onclick="editProduct(1)">Редагувати</button>
 }
-
+```
 
 ## Приклади використання
 
 ### Реєстрація користувача
+```
 POST /register
 {
     "username": "admin",
     "email": "admin@example.com",
     "password": "secure_password"
 }
-
+```
 
 ### Додавання товару
+```
 POST /add_product
 {
     "name": "Ноутбук Lenovo",
@@ -178,8 +194,9 @@ POST /add_product
     "price": 25000.00,
     "min_quantity": 2
 }
-
+```
 ### Додавання операції приходу
+```
 POST /add_incoming
 {
     "product_id": 1,
