@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Звіти</h1>
+
+<!-- Форма вибору періоду -->
+<div class="report-filters">
+    <form class="date-range-form" onsubmit="generateReport(event)">
+        <div class="date-range">
+            <label>
+                Початкова дата:
+                <input type="date" name="start_date" required>
+            </label>
+            <br>
+            <label>
+                Кінцева дата:
+                <input type="date" name="end_date" required>
+            </label>
+        </div>
+        <button type="submit">Сформувати звіт</button>
+    </form>
+</div>
+
+<!-- Зведена інформація -->
+<div class="summary-info">
+    <div class="summary-card">
+        <h3>Загальна вартість товарів</h3>
+        <p>{{ total_value }} грн</p>
+    </div>
+    <div class="summary-card">
+        <h3>Кількість товарів</h3>
+        <p>{{ total_items }}</p>
+    </div>
+</div>
+
+<!-- Товари з низьким залишком -->
+<div class="low-stock-warning">
+    <h2>Товари з низьким залишком</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Назва</th>
+                <th>Артикул</th>
+                <th>Поточний залишок</th>
+                <th>Мінімальний залишок</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in low_stock_products %}
+            <tr {% if product.quantity <= product.min_quantity %}class="warning"{% endif %}>
+                <td>{{ product.name }}</td>
+                <td>{{ product.code }}</td>
+                <td>{{ product.quantity }}</td>
+                <td>{{ product.min_quantity }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Звіт про рух товарів -->
+<div class="movement-report">
+    <h2>Рух товарів</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Товар</th>
+                <th>Тип операції</th>
+                <th>Кількість</th>
+                <th>Ціна</th>
+                <th>Сума</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for operation in operations %}
+            <tr>
+                <td>{{ operation.date.strftime('%d.%m.%Y') }}</td>
+                <td>{{ operation.product.name }}</td>
+                <td>{{ 'Прихід' if operation.type == 'incoming' else 'Витрата' }}</td>
+                <td>{{ operation.quantity }}</td>
+                <td>{{ operation.price }}</td>
+                <td>{{ operation.quantity * operation.price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %} 

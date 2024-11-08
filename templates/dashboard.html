@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- Секція швидких дій -->
+    <div class="quick-actions">
+        <h2>Швидкі дії</h2>
+        <div class="action-buttons">
+            <!-- Кнопки швидкого доступу до основних функцій -->
+            <a href="{{ url_for('catalog') }}" class="action-button">
+                <i class="fas fa-box"></i>
+                <span>Каталог товарів</span>
+            </a>
+            <a href="{{ url_for('inventory') }}" class="action-button">
+                <i class="fas fa-warehouse"></i>
+                <span>Облік товарів</span>
+            </a>
+            <a href="{{ url_for('reports') }}" class="action-button">
+                <i class="fas fa-chart-bar"></i>
+                <span>Звіти</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Картка товарів з низьким залишком -->
+        <div class="dashboard-card">
+            <h3>Товари з низьким залишком</h3>
+            <div class="scrollable-content">
+                <!-- Таблиця товарів з низьким залишком -->
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Назва</th>
+                            <th>Залишок</th>
+                            <th>Мін. залишок</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in low_stock_products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.quantity }}</td>
+                            <td>{{ product.min_quantity }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Картка останніх операцій -->
+        <div class="dashboard-card">
+            <h3>Останні операції</h3>
+            <div class="scrollable-content">
+                <!-- Таблиця останніх операцій -->
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тип</th>
+                            <th>Товар</th>
+                            <th>Кількість</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for operation in recent_operations %}
+                        <tr>
+                            <td>{{ operation.date.strftime('%d.%m.%Y') }}</td>
+                            <td>{{ 'Прихід' if operation.type == 'incoming' else 'Витрата' }}</td>
+                            <td>{{ operation.product.name }}</td>
+                            <td>{{ operation.quantity }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Картка загальної статистики -->
+        <div class="dashboard-card">
+            <h3>Загальна статистика</h3>
+            <div class="stats-grid">
+                <!-- Показники статистики -->
+                <div class="stat-item">
+                    <span class="stat-label">Загальна вартість</span>
+                    <span class="stat-value">{{ "%.2f"|format(total_value) }} грн</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Всього товарів</span>
+                    <span class="stat-value">{{ products|length }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Товарів з низьким залишком</span>
+                    <span class="stat-value">{{ low_stock_products|length }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

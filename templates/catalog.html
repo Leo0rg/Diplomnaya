@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Каталог товарів</h1>
+
+<button onclick="showAddProductForm()">Додати товар</button>
+
+<div id="productForm" style="display: none;">
+    <form onsubmit="addProduct(event)">
+        <input type="text" name="name" placeholder="Назва товару" required>
+        <input type="text" name="code" placeholder="Артикул" required>
+        <input type="number" name="quantity" placeholder="Кількість" required>
+        <input type="number" name="price" placeholder="Ціна" step="0.01" required>
+        <input type="number" name="min_quantity" placeholder="Мінімальний залишок" required>
+        <button type="submit">Зберегти</button>
+    </form>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Назва</th>
+            <th>Артикул</th>
+            <th>Кількість</th>
+            <th>Ціна</th>
+            <th>Дії</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in products %}
+        <tr>
+            <td>{{ product.name }}</td>
+            <td>{{ product.code }}</td>
+            <td>{{ product.quantity }}</td>
+            <td>{{ product.price }}</td>
+            <td>
+                <button onclick="editProduct('{{ product.id }}')">Редагувати</button>
+                <button onclick="deleteProduct('{{ product.id }}')">Видалити</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %} 

@@ -1,0 +1,96 @@
+Інструкція з встановлення та налаштування системи інвентаризації
+
+1. Підготовка середовища:
+   - Встановіть Python 3.8 або новішу версію (https://www.python.org/downloads/)
+   - Встановіть MySQL Server 8.0 (https://dev.mysql.com/downloads/mysql/)
+     * Під час встановлення запам'ятайте пароль для root користувача
+     * Переконайтеся, що MySQL сервер запущено
+
+2. Налаштування проекту:
+   a) Створіть нову папку для проекту та відкрийте її в терміналі
+   
+   b) Створіть віртуальне середовище:
+      Windows: python -m venv .venv
+      Linux/Mac: python3 -m venv .venv
+   
+   c) Активуйте віртуальне середовище:
+      Windows: .venv\Scripts\activate
+      Linux/Mac: source .venv/bin/activate
+
+3. Встановлення залежностей:
+   pip install -r requirements.txt
+
+4. Налаштування бази даних:
+   a) Підключіться до MySQL через MySQL Command Line Client або MySQL Workbench
+   
+   b) Створіть базу даних та користувача:
+      mysql -u root -p
+      (введіть пароль root користувача)
+      
+      Виконайте команди:
+      CREATE DATABASE inventory_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      CREATE USER 'inventory_user'@'localhost' IDENTIFIED BY 'your_password';
+      GRANT ALL PRIVILEGES ON inventory_db.* TO 'inventory_user'@'localhost';
+      FLUSH PRIVILEGES;
+      
+      (замініть 'your_password' на бажаний пароль)
+
+5. Налаштування конфігурації:
+   a) Створіть файл .env в корені проекту
+   b) Додайте наступні налаштування (замініть значення на власні):
+      MYSQL_USER=inventory_user
+      MYSQL_PASSWORD=your_password
+      MYSQL_HOST=localhost
+      MYSQL_DATABASE=inventory_db
+
+6. Структура проекту:
+   Переконайтеся, що файли розміщені в правильних папках:
+   /project_root
+   ├── .env
+   ├── app.py
+   ├── requirements.txt
+   ├── static/
+   │   ├── css/
+   │   │   └── style.css
+   │   └── js/
+   │       └── main.js
+   └── templates/
+       ├── base.html
+       ├── catalog.html
+       ├── dashboard.html
+       ├── inventory.html
+       ├── login.html
+       ├── register.html
+       └── reports.html
+
+7. Запуск проекту:
+   a) Активуйте віртуальне середовище (якщо ще не активоване)
+   b) Запустіть сервер розробки:
+      python app.py
+   c) Відкрийте браузер і перейдіть за адресою:
+      http://127.0.0.1:5000
+
+8. Перше використання:
+   a) Перейдіть на сторінку реєстрації
+   b) Створіть обліковий запис адміністратора
+   c) Увійдіть в систему
+
+9. Можливі проблеми:
+   - Якщо виникає помилка підключення до бази даних:
+     * Перевірте правильність даних в файлі .env
+     * Переконайтеся, що MySQL сервер запущено
+     * Перевірте права доступу користувача бази даних
+   
+   - Якщо не відображаються стилі:
+     * Перевірте шляхи до файлів CSS та JS
+     * Очистіть кеш браузера
+     * Перевірте консоль браузера на наявність помилок
+
+10. Додаткові налаштування:
+    - Для використання в production-середовищі:
+      * Змініть SECRET_KEY в app.py
+      * Налаштуйте HTTPS
+      * Використовуйте виробничий сервер (наприклад, Gunicorn)
+      * Налаштуйте резервне копіювання бази даних
+
+Примітка: Ця інструкція передбачає базове розуміння роботи з командним рядком та встановлення програмного забезпечення. 

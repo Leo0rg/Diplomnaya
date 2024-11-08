@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Облік товарів</h1>
+
+<div class="inventory-forms">
+    <!-- Форма для приходів -->
+    <div class="form-section">
+        <h2>Прихід товару</h2>
+        <form onsubmit="addIncoming(event)">
+            <select name="product_id" required>
+                <option value="">Оберіть товар</option>
+                {% for product in products %}
+                <option value="{{ product.id }}">{{ product.name }} ({{ product.code }})</option>
+                {% endfor %}
+            </select>
+            <input type="number" name="quantity" placeholder="Кількість" required>
+            <input type="number" name="price" placeholder="Ціна закупівлі" step="0.01" required>
+            <input type="datetime-local" name="datetime" required>
+            <button type="submit">Додати прихід</button>
+        </form>
+    </div>
+
+    <!-- Форма для витрат -->
+    <div class="form-section">
+        <h2>Витрата товару</h2>
+        <form onsubmit="addOutgoing(event)">
+            <select name="product_id" required>
+                <option value="">Оберіть товар</option>
+                {% for product in products %}
+                <option value="{{ product.id }}">{{ product.name }} ({{ product.code }})</option>
+                {% endfor %}
+            </select>
+            <input type="number" name="quantity" placeholder="Кількість" required>
+            <input type="number" name="price" placeholder="Ціна продажу" step="0.01" required>
+            <input type="datetime-local" name="datetime" required>
+            <button type="submit">Додати витрату</button>
+        </form>
+    </div>
+</div>
+
+<!-- Таблиця останніх операцій -->
+<div class="recent-operations">
+    <h2>Останні операції</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Дата та час</th>
+                <th>Тип</th>
+                <th>Товар</th>
+                <th>Кількість</th>
+                <th>Ціна</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for operation in operations %}
+            <tr>
+                <td>{{ operation.date.strftime('%d.%m.%Y %H:%M:%S') }}</td>
+                <td>{{ 'Прихід' if operation.type == 'incoming' else 'Витрата' }}</td>
+                <td>{{ operation.product.name }}</td>
+                <td>{{ operation.quantity }}</td>
+                <td>{{ operation.price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %} 
