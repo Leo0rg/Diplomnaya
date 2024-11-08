@@ -24,7 +24,7 @@
    a) Підключіться до MySQL через MySQL Command Line Client або MySQL Workbench
    
    b) Створіть базу даних та користувача:
-      mysql -u root -p
+      & "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" "-u" "root" "-p"
       (введіть пароль root користувача)
       
       Виконайте команди:

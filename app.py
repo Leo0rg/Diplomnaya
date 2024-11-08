@@ -12,11 +12,8 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'  # Секретний ключ для сесій (замініть на власний)
 
-# Налаштування підключення до MySQL
-app.config['SQLALCHEMY_DATABASE_URI'] = (
-    f"mysql://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PASSWORD')}@"
-    f"{os.getenv('MYSQL_HOST')}/{os.getenv('MYSQL_DATABASE')}"
-)
+# Налаштування підключення до SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///inventory.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -293,7 +290,7 @@ def get_product(id):
                 "price": product.price,
                 "min_quantity": product.min_quantity
             })
-        return jsonify({"error": "Товар не знайдено"}), 404
+        return jsonify({"error": "Товар не знайден��"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
