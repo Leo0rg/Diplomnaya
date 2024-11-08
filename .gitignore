@@ -4,3 +4,5 @@
 *.db-shm
 *.db-wal
 *.db-journal
+.gitignore
+project_documentation.md
