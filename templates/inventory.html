@@ -55,7 +55,7 @@
         <tbody>
             {% for operation in operations %}
             <tr>
-                <td>{{ operation.date.strftime('%d.%m.%Y %H:%M:%S') }}</td>
+                <td>{{ operation.date.strftime('%d.%m.%Y %H:%M') }}</td>
                 <td>{{ 'Прихід' if operation.type == 'incoming' else 'Витрата' }}</td>
                 <td>{{ operation.product.name }}</td>
                 <td>{{ operation.quantity }}</td>

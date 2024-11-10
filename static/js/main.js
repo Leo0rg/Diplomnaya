@@ -31,7 +31,7 @@ function addProduct(event) {
     });
 }
 
-// Функція для редагування ��овару
+// Функція для редагування овару
 function editProduct(id) {
     // Отримуємо дані товару
     fetch(`/get_product/${id}`)
@@ -178,6 +178,33 @@ function generateReport(event) {
     const startDate = formData.get('start_date');
     const endDate = formData.get('end_date');
     
-    // Перезавантажуємо сторінку з параметрами дат
+    if (!startDate || !endDate) {
+        alert('Будь ласка, виберіть початкову та кінцеву дати');
+        return;
+    }
+    
+    // Перенаправляємо на сторінку звітів з параметрами дат
     window.location.href = `/reports?start_date=${startDate}&end_date=${endDate}`;
+}
+
+// Функція для видалення товару
+function deleteProduct(id) {
+    if (confirm('Ви впевнені, що хочете видалити цей товар?')) {
+        fetch(`/delete_product/${id}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                alert(data.message);
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Помилка при видаленні товару');
+        });
+    }
 } 

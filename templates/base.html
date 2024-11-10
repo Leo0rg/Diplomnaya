@@ -14,12 +14,18 @@
     <nav>
         <ul>
             {% if 'user_id' in session %}
-            <!-- Показуємо меню тільки авторизованим користувачам -->
-            <li><a href="{{ url_for('index') }}">Головна</a></li>
-            <li><a href="{{ url_for('catalog') }}">Каталог</a></li>
-            <li><a href="{{ url_for('inventory') }}">Облік</a></li>
-            <li><a href="{{ url_for('reports') }}">Звіти</a></li>
-            <li class="logout"><a href="{{ url_for('logout') }}">Вийти</a></li>
+            <!-- Основное меню -->
+            <div class="nav-left">
+                <li><a href="{{ url_for('index') }}">Головна</a></li>
+                <li><a href="{{ url_for('catalog') }}">Каталог</a></li>
+                <li><a href="{{ url_for('inventory') }}">Облік</a></li>
+                <li><a href="{{ url_for('reports') }}">Звіти</a></li>
+                <li><a href="{{ url_for('action_history') }}">Історія дій</a></li>
+            </div>
+            <!-- Кнопка выхода -->
+            <div class="nav-right">
+                <li><a href="{{ url_for('logout') }}">Вийти</a></li>
+            </div>
             {% endif %}
         </ul>
     </nav>

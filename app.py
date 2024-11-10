@@ -46,6 +46,17 @@ class User(db.Model):
     password = db.Column(db.String(120), nullable=False)  # Хешований пароль
     email = db.Column(db.String(120), unique=True, nullable=False)  # Email
 
+# Модель для логування дій користувачів
+class ActionLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    action_type = db.Column(db.String(50), nullable=False)  # Тип дії (додавання, редагування, видалення)
+    description = db.Column(db.Text, nullable=False)  # Опис дії
+    timestamp = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    
+    # Зв'язок з користувачем
+    user = db.relationship('User', backref=db.backref('actions', lazy=True))
+
 # Декоратор для перевірки авторизації користувача
 def login_required(view_function):
     @wraps(view_function)
@@ -115,13 +126,19 @@ def add_product():
             db.session.add(product)
             db.session.commit()
             
+            # Логуємо дію
+            log_action(
+                'add_product',
+                f'Додано новий товар: {name} (артикул: {code})'
+            )
+            
             return jsonify({"message": "Товар успішно додано"})
     except ValueError as e:
         db.session.rollback()
         return jsonify({"error": "Некоректні дані. Перевірте правильність введених значень"}), 400
     except Exception as e:
         db.session.rollback()
-        print(f"Error adding product: {str(e)}")  # Для відладки
+        print(f"Error adding product: {str(e)}")
         return jsonify({"error": "Помилка при додаванні товару"}), 400
 
 # Сторінка обліку товарів
@@ -136,24 +153,51 @@ def inventory():
 @app.route('/reports')
 @login_required
 def reports():
-    # Отримуємо товари з низьким залишком
-    low_stock_products = Product.query.filter(Product.quantity <= Product.min_quantity).all()
-    
-    # Отримуємо операції за останній місяць
-    month_ago = datetime.now(UTC) - timedelta(days=30)
-    operations = Operation.query.filter(Operation.date >= month_ago).order_by(Operation.date.desc()).all()
-    
-    # Рахуємо загальну вартість товарів
-    total_value = sum(product.quantity * product.price for product in Product.query.all())
-    
-    # Рахуємо загальну кількість товарів
-    total_items = sum(product.quantity for product in Product.query.all())
-    
-    return render_template('reports.html',
-                         low_stock_products=low_stock_products,
-                         operations=operations,
-                         total_value=total_value,
-                         total_items=total_items)
+    try:
+        # Отримуємо параметри дат з запиту
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+
+        # Отримуємо товари з низьким залишком
+        low_stock_products = Product.query.filter(Product.quantity <= Product.min_quantity).all()
+        
+        # Базовий запит операцій
+        operations_query = Operation.query
+
+        # Якщо вказані дати, фільтруємо операції за періодом
+        if start_date and end_date:
+            start = datetime.strptime(start_date, '%Y-%m-%d')
+            end = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)  # До кінця дня
+            operations_query = operations_query.filter(Operation.date.between(start, end))
+            
+            # Логуємо формування звіту
+            log_action(
+                'generate_report',
+                f'Сформовано звіт за період: {start_date} - {end_date}'
+            )
+        else:
+            # Якщо дати не вказані, беремо операції за останній місяць
+            month_ago = datetime.now(UTC) - timedelta(days=30)
+            operations_query = operations_query.filter(Operation.date >= month_ago)
+
+        operations = operations_query.order_by(Operation.date.desc()).all()
+        
+        # Рахуємо загальну вартість товарів
+        total_value = sum(product.quantity * product.price for product in Product.query.all())
+        
+        # Рахуємо загальну кількість товарів
+        total_items = sum(product.quantity for product in Product.query.all())
+        
+        return render_template('reports.html',
+                             low_stock_products=low_stock_products,
+                             operations=operations,
+                             total_value=total_value,
+                             total_items=total_items,
+                             start_date=start_date,
+                             end_date=end_date)
+    except Exception as e:
+        print(f"Error generating report: {e}")
+        return render_template('reports.html', error="Помилка при формуванні звіту")
 
 # Додавання операції приходу товару
 @app.route('/add_incoming', methods=['POST'])
@@ -186,6 +230,12 @@ def add_incoming():
         db.session.add(operation)
         db.session.commit()
 
+        # Логуємо дію
+        log_action(
+            'add_incoming',
+            f'Додано прихід товару: {product.name}, кількість: {quantity}, ціна: {price}'
+        )
+
         return jsonify({"message": "Прихід успішно додано"})
     except Exception as e:
         db.session.rollback()
@@ -198,7 +248,6 @@ def add_outgoing():
         product_id = int(request.form['product_id'])
         quantity = int(request.form['quantity'])
         price = float(request.form['price'])
-        # Парсим дату и время из формы
         date = datetime.strptime(request.form['datetime'], '%Y-%m-%dT%H:%M')
 
         product = Product.query.get(product_id)
@@ -223,6 +272,12 @@ def add_outgoing():
         db.session.add(operation)
         db.session.commit()
 
+        # Логуємо дію
+        log_action(
+            'add_outgoing',
+            f'Додано витрату товару: {product.name}, кількість: {quantity}, ціна: {price}'
+        )
+
         return jsonify({"message": "Витрату успішно додано"})
     except Exception as e:
         db.session.rollback()
@@ -239,6 +294,13 @@ def login():
         
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
+            
+            # Логуємо успішний вхід
+            log_action(
+                'user_login',
+                f'Користувач {username} увійшов в систему'
+            )
+            
             return redirect(url_for('index'))
         else:
             return render_template('login.html', error='Невірний логін або пароль')
@@ -264,6 +326,13 @@ def register():
         try:
             db.session.add(new_user)
             db.session.commit()
+            
+            # Логуємо реєстрацію нового користувача
+            log_action(
+                'user_registration',
+                f'Зареєстровано нового користувача: {username}'
+            )
+            
             return redirect(url_for('login'))
         except Exception as e:
             db.session.rollback()
@@ -273,6 +342,15 @@ def register():
 
 @app.route('/logout')
 def logout():
+    if 'user_id' in session:
+        user = User.query.get(session['user_id'])
+        if user:
+            # Логуємо вихід з системи
+            log_action(
+                'user_logout',
+                f'Користувач {user.username} вийшов з системи'
+            )
+    
     session.pop('user_id', None)
     return redirect(url_for('login'))
 
@@ -290,7 +368,7 @@ def get_product(id):
                 "price": product.price,
                 "min_quantity": product.min_quantity
             })
-        return jsonify({"error": "Товар не знайден��"}), 404
+        return jsonify({"error": "Товар не знайден"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -302,6 +380,11 @@ def update_product(id):
         product = Product.query.get(id)
         if not product:
             return jsonify({"error": "Товар не знайдено"}), 404
+
+        # Зберігаємо старі значення для логу
+        old_name = product.name
+        old_quantity = product.quantity
+        old_price = product.price
 
         # Отримуємо дані з форми
         product.name = request.form['name']
@@ -316,9 +399,82 @@ def update_product(id):
             return jsonify({"error": "Товар з таким артикулом вже існує"}), 400
 
         db.session.commit()
+
+        # Логуємо зміни
+        changes = []
+        if old_name != product.name:
+            changes.append(f"назву з '{old_name}' на '{product.name}'")
+        if old_quantity != product.quantity:
+            changes.append(f"кількість з {old_quantity} на {product.quantity}")
+        if old_price != product.price:
+            changes.append(f"ціну з {old_price} на {product.price}")
+
+        if changes:
+            log_action(
+                'update_product',
+                f"Оновлено товар (артикул: {id}): змінено " + ", ".join(changes)
+            )
+
         return jsonify({"message": "Товар успішно оновлено"})
     except ValueError as e:
         return jsonify({"error": "Некоректні дані. Перевірте правильність введених значень"}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
+
+def log_action(action_type, description):
+    """
+    Функція для логування дій користувача
+    """
+    try:
+        if 'user_id' in session:
+            log = ActionLog(
+                user_id=session['user_id'],
+                action_type=action_type,
+                description=description
+            )
+            db.session.add(log)
+            db.session.commit()
+    except Exception as e:
+        print(f"Error logging action: {e}")
+        db.session.rollback()
+
+@app.route('/action_history')
+@login_required
+def action_history():
+    try:
+        # Отримуємо всі логи, відсортовані за часом (останні спочатку)
+        logs = ActionLog.query.order_by(ActionLog.timestamp.desc()).all()
+        return render_template('action_history.html', logs=logs)
+    except Exception as e:
+        print(f"Error getting action history: {e}")
+        return render_template('action_history.html', logs=[], error="Помилка при завантаженні історії")
+
+@app.route('/delete_product/<int:id>', methods=['POST'])
+@login_required
+def delete_product(id):
+    try:
+        product = Product.query.get(id)
+        if not product:
+            return jsonify({"error": "Товар не знайдено"}), 404
+
+        product_name = product.name
+        product_code = product.code
+
+        # Видаляємо пов'язані операції
+        Operation.query.filter_by(product_id=id).delete()
+        
+        # Видаляємо сам товар
+        db.session.delete(product)
+        db.session.commit()
+
+        # Логуємо видалення
+        log_action(
+            'delete_product',
+            f'Видалено товар: {product_name} (артикул: {product_code})'
+        )
+
+        return jsonify({"message": "Товар успішно видалено"})
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
