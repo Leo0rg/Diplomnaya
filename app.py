@@ -50,9 +50,9 @@ class User(db.Model):
 class ActionLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    action_type = db.Column(db.String(50), nullable=False)  # Тип дії (додавання, редагування, видалення)
+    action_type = db.Column(db.String(50), nullable=False, default='action')
     description = db.Column(db.Text, nullable=False)  # Опис дії
-    timestamp = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.now)
     
     # Зв'язок з користувачем
     user = db.relationship('User', backref=db.backref('actions', lazy=True))
@@ -127,10 +127,7 @@ def add_product():
             db.session.commit()
             
             # Логуємо дію
-            log_action(
-                'add_product',
-                f'Додано новий товар: {name} (артикул: {code})'
-            )
+            log_action(f'Додано новий товар: {name} (артикул: {code})')
             
             return jsonify({"message": "Товар успішно додано"})
     except ValueError as e:
@@ -158,7 +155,7 @@ def reports():
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
 
-        # Отримуємо товари з низьким залишком
+        # Отримуємо тари з низьким залишком
         low_stock_products = Product.query.filter(Product.quantity <= Product.min_quantity).all()
         
         # Базовий запит операцій
@@ -171,10 +168,7 @@ def reports():
             operations_query = operations_query.filter(Operation.date.between(start, end))
             
             # Логуємо формування звіту
-            log_action(
-                'generate_report',
-                f'Сформовано звіт за період: {start_date} - {end_date}'
-            )
+            log_action(f'Сформовано звіт за період: {start_date} - {end_date}')
         else:
             # Якщо дати не вказані, беремо операції за останній місяць
             month_ago = datetime.now(UTC) - timedelta(days=30)
@@ -231,10 +225,7 @@ def add_incoming():
         db.session.commit()
 
         # Логуємо дію
-        log_action(
-            'add_incoming',
-            f'Додано прихід товару: {product.name}, кількість: {quantity}, ціна: {price}'
-        )
+        log_action(f'Додано прихід товару: {product.name}, кількість: {quantity}, ціна: {price}')
 
         return jsonify({"message": "Прихід успішно додано"})
     except Exception as e:
@@ -273,10 +264,7 @@ def add_outgoing():
         db.session.commit()
 
         # Логуємо дію
-        log_action(
-            'add_outgoing',
-            f'Додано витрату товару: {product.name}, кількість: {quantity}, ціна: {price}'
-        )
+        log_action(f'Додано витрату товару: {product.name}, кількість: {quantity}, ціна: {price}')
 
         return jsonify({"message": "Витрату успішно додано"})
     except Exception as e:
@@ -296,10 +284,7 @@ def login():
             session['user_id'] = user.id
             
             # Логуємо успішний вхід
-            log_action(
-                'user_login',
-                f'Користувач {username} увійшов в систему'
-            )
+            log_action(f'Користувач {username} увійшов в систему')
             
             return redirect(url_for('index'))
         else:
@@ -328,10 +313,7 @@ def register():
             db.session.commit()
             
             # Логуємо реєстрацію нового користувача
-            log_action(
-                'user_registration',
-                f'Зареєстровано нового користувача: {username}'
-            )
+            log_action(f'Зареєстровано нового користувача: {username}')
             
             return redirect(url_for('login'))
         except Exception as e:
@@ -346,10 +328,7 @@ def logout():
         user = User.query.get(session['user_id'])
         if user:
             # Логуємо вихід з системи
-            log_action(
-                'user_logout',
-                f'Користувач {user.username} вийшов з системи'
-            )
+            log_action(f'Користувач {user.username} вийшов з системи')
     
     session.pop('user_id', None)
     return redirect(url_for('login'))
@@ -379,7 +358,7 @@ def update_product(id):
     try:
         product = Product.query.get(id)
         if not product:
-            return jsonify({"error": "Товар не знайдено"}), 404
+            return jsonify({"error": "Товар не зайдено"}), 404
 
         # Зберігаємо старі значення для логу
         old_name = product.name
@@ -410,10 +389,7 @@ def update_product(id):
             changes.append(f"ціну з {old_price} на {product.price}")
 
         if changes:
-            log_action(
-                'update_product',
-                f"Оновлено товар (артикул: {id}): змінено " + ", ".join(changes)
-            )
+            log_action(f"Оновлено товар (артикул: {id}): змінено " + ", ".join(changes))
 
         return jsonify({"message": "Товар успішно оновлено"})
     except ValueError as e:
@@ -422,19 +398,22 @@ def update_product(id):
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
 
-def log_action(action_type, description):
+def log_action(description):
     """
     Функція для логування дій користувача
     """
     try:
         if 'user_id' in session:
+            print(f"Logging action: {description}")
             log = ActionLog(
                 user_id=session['user_id'],
-                action_type=action_type,
-                description=description
+                action_type='action',
+                description=description,
+                timestamp=datetime.now()
             )
             db.session.add(log)
             db.session.commit()
+            print("Action logged successfully")
     except Exception as e:
         print(f"Error logging action: {e}")
         db.session.rollback()
@@ -443,8 +422,10 @@ def log_action(action_type, description):
 @login_required
 def action_history():
     try:
-        # Отримуємо всі логи, відсортовані за часом (останні спочатку)
+        # Отладочный вывод
+        print("Fetching action history...")
         logs = ActionLog.query.order_by(ActionLog.timestamp.desc()).all()
+        print(f"Found {len(logs)} logs")
         return render_template('action_history.html', logs=logs)
     except Exception as e:
         print(f"Error getting action history: {e}")
@@ -469,10 +450,7 @@ def delete_product(id):
         db.session.commit()
 
         # Логуємо видалення
-        log_action(
-            'delete_product',
-            f'Видалено товар: {product_name} (артикул: {product_code})'
-        )
+        log_action(f'Видалено товар: {product_name} (артикул: {product_code})')
 
         return jsonify({"message": "Товар успішно видалено"})
     except Exception as e:

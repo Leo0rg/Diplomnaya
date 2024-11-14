@@ -15,7 +15,6 @@
             <tr>
                 <th>Дата та час</th>
                 <th>Користувач</th>
-                <th>Тип дії</th>
                 <th>Опис</th>
             </tr>
         </thead>
@@ -24,29 +23,6 @@
             <tr>
                 <td>{{ log.timestamp.strftime('%d.%m.%Y %H:%M:%S') }}</td>
                 <td>{{ log.user.username }}</td>
-                <td>
-                    {% if log.action_type == 'add_product' %}
-                        Додавання товару
-                    {% elif log.action_type == 'update_product' %}
-                        Редагування товару
-                    {% elif log.action_type == 'delete_product' %}
-                        Видалення товару
-                    {% elif log.action_type == 'add_incoming' %}
-                        Прихід товару
-                    {% elif log.action_type == 'add_outgoing' %}
-                        Витрата товару
-                    {% elif log.action_type == 'generate_report' %}
-                        Формування звіту
-                    {% elif log.action_type == 'user_login' %}
-                        Вхід в систему
-                    {% elif log.action_type == 'user_logout' %}
-                        Вихід з системи
-                    {% elif log.action_type == 'user_registration' %}
-                        Реєстрація користувача
-                    {% else %}
-                        {{ log.action_type }}
-                    {% endif %}
-                </td>
                 <td>{{ log.description }}</td>
             </tr>
             {% endfor %}
